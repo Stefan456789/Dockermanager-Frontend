@@ -1,4 +1,4 @@
-package com.example.docker_manager
+package me.stefan.docker_manager
 
 import io.flutter.embedding.android.FlutterActivity
 

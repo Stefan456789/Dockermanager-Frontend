@@ -30,7 +30,11 @@ class User {
 
 class AuthService extends ChangeNotifier {
   final GoogleSignIn _googleSignIn = GoogleSignIn(
-    scopes: ['email', 'profile'],
+    clientId: dotenv.env['GOOGLE_CLIENT_ID'],
+    scopes: ['email',
+    'profile',
+    'openid',
+    ],
   );
   final Dio _dio = Dio();
   User? _currentUser;
@@ -61,11 +65,13 @@ class AuthService extends ChangeNotifier {
   Future<bool> signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      debugPrint('Google user: $googleUser');
       if (googleUser == null) return false;
 
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
       final String? idToken = googleAuth.idToken;
+      debugPrint('Google ID token: $idToken');
 
       if (idToken == null) return false;
 
