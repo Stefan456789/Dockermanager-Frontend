@@ -3,11 +3,19 @@ import 'package:docker_manager/screens/login_screen.dart';
 import 'package:docker_manager/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load();
-  runApp(const MyApp());
+  
+  runApp(
+    // Use ChangeNotifierProvider instead of Provider.value
+    ChangeNotifierProvider(
+      create: (_) => AuthService(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -24,7 +32,7 @@ class MyApp extends StatelessWidget {
       ),
       darkTheme: ThemeData(brightness: Brightness.dark, useMaterial3: true),
       themeMode: ThemeMode.system,
-      home: const Text('Hello, World!'),
+      home: const AuthWrapper(),
     );
   }
 }
@@ -37,24 +45,48 @@ class AuthWrapper extends StatefulWidget {
 }
 
 class _AuthWrapperState extends State<AuthWrapper> {
+  late final Future<void> _initializationFuture;
+  
+  @override
+  void initState() {
+    super.initState();
+    final authService = Provider.of<AuthService>(context, listen: false);
+    _initializationFuture = authService.init();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final authService = AuthService();
-
-    // Show loading indicator while initializing
-    if (!authService.isInitialized) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
-
-    // Redirect based on authentication status
-    if (authService.isAuthenticated) {
-      return const ContainerListScreen();
-    } else {
-      return const LoginScreen();
-    }
+    return FutureBuilder(
+      future: _initializationFuture,
+      builder: (context, snapshot) {
+        // Show loading indicator while initializing
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+        
+        // Handle initialization errors
+        if (snapshot.hasError) {
+          return Scaffold(
+            body: Center(
+              child: Text('Error initializing: ${snapshot.error}'),
+            ),
+          );
+        }
+        
+        // Get the current auth state after initialization is complete
+        final authService = Provider.of<AuthService>(context);
+        
+        // Redirect based on authentication status
+        if (authService.isAuthenticated) {
+          return const ContainerListScreen();
+        } else {
+          return const LoginScreen();
+        }
+      },
+    );
   }
 }

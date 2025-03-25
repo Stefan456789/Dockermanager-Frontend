@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:docker_manager/services/auth_service.dart';
 import 'package:provider/provider.dart';
 import 'package:docker_manager/screens/container_list_screen.dart';
-
+import 'package:sign_button/sign_button.dart';
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -53,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               const Spacer(),
               const Icon(
-                Icons.dock,
+                Icons.dns_rounded,
                 size: 80,
                 color: Colors.blue,
               ),
@@ -66,20 +66,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 48),
-              ElevatedButton.icon(
-                onPressed:
-                    _isLoading ? null : () => _handleGoogleSignIn(context),
-                icon: Image.asset(
-                  'assets/google_logo.png',
-                  height: 24.0,
-                ),
-                label:
-                    Text(_isLoading ? 'Signing in...' : 'Sign in with Google'),
-                style: ElevatedButton.styleFrom(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                  minimumSize: const Size(double.infinity, 0),
-                ),
+              SignInButton(
+                buttonType: ButtonType.google,
+                buttonSize: ButtonSize.large, // small(default), medium, large
+                onPressed: () {_handleGoogleSignIn(context);},
               ),
               const Spacer(),
             ],

@@ -48,9 +48,14 @@ class AuthService extends ChangeNotifier {
 
   Future<void> init() async {
     if (_isInitialized) return;
-    await _loadUserFromPrefs();
-    _isInitialized = true;
-    notifyListeners();
+    try {
+      await _loadUserFromPrefs();
+      _isInitialized = true;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error initializing auth service: $e');
+      _isInitialized = true; // Mark as initialized even if there's an error
+    }
   }
 
   Future<bool> signInWithGoogle() async {
