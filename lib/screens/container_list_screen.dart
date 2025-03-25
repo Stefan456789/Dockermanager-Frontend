@@ -24,22 +24,35 @@ class _ContainerListScreenState extends State<ContainerListScreen> {
 
   Future<void> _fetchContainers() async {
     try {
+      if (!mounted) return;
+      
       setState(() {
         _isLoading = true;
         _error = null;
       });
 
       final containers = await _apiService.getContainers();
+      
+      if (!mounted) return;
+      
       setState(() {
         _containers = containers;
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
+      
       setState(() {
         _error = 'Failed to fetch containers: $e';
         _isLoading = false;
       });
     }
+  }
+
+  @override
+  void dispose() {
+    // Clean up any resources or listeners here if needed
+    super.dispose();
   }
 
   @override
