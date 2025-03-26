@@ -40,6 +40,7 @@ class AuthService extends ChangeNotifier {
 
   AuthService() {
     _dio.options.baseUrl = dotenv.env['BASE_URL'] ?? 'http://10.0.2.2:3000/api';
+    init();
   }
 
   User? get currentUser => _currentUser;

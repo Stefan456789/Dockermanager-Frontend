@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:docker_manager/models/container_info.dart';
+import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:docker_manager/services/auth_service.dart';
@@ -10,15 +11,14 @@ class DockerApiService {
   final Dio _dio = Dio();
   final String baseUrl;
   final String wsUrl;
-  final AuthService authService;
+  final AuthService authService = AuthService();
 
-  DockerApiService({required this.authService})
+  DockerApiService()
       : baseUrl = dotenv.env['BASE_URL'] ?? 'http://10.0.2.2:3000/api',
         wsUrl = dotenv.env['WS_URL'] ?? 'ws://10.0.2.2:3000/api' {
     _dio.options.baseUrl = baseUrl;
     _dio.options.connectTimeout = const Duration(seconds: 5);
     _dio.options.receiveTimeout = const Duration(seconds: 3);
-
     // Add auth token to all requests
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) {
@@ -91,8 +91,9 @@ class DockerApiService {
     }
   }
 
-  WebSocketChannel getContainerLogsStream(String id) {
+  Future<WebSocketChannel> getContainerLogsStream(String id) async {
     // Ensure token is added to WebSocket connection
+    await authService.init();
     final token = authService.token;
     if (token == null) {
       throw Exception('Authentication required');

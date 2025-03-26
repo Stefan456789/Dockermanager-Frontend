@@ -13,8 +13,8 @@ class WebSocketManager {
 
   WebSocketManager({required this.containerId, required this.apiService});
 
-  void connect() {
-    _channel = apiService.getContainerLogsStream(containerId);
+  Future<void> connect() async {
+    _channel = await apiService.getContainerLogsStream(containerId);
     _channel!.stream.listen(
       (message) {
         onMessage?.call(message.toString());
