@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:docker_manager/services/auth_service.dart';
-import 'package:docker_manager/screens/container_list_screen.dart';
 import 'package:sign_button/sign_button.dart';
 
 class LoginScreen extends StatefulWidget {
