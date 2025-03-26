@@ -30,7 +30,7 @@ class TerminalFullscreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Fullscreen Console"),
+        title: const Text("Console"),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: onBack,

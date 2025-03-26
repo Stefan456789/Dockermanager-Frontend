@@ -91,7 +91,7 @@ class DockerApiService {
     }
   }
 
-  Future<WebSocketChannel> getContainerLogsStream(String id) async {
+  Future<WebSocketChannel?> getContainerLogsStream(String id) async {
     // Ensure token is added to WebSocket connection
     await authService.init();
     final token = authService.token;
@@ -100,7 +100,12 @@ class DockerApiService {
     }
     
     final url = '$wsUrl/logs?containerId=$id&token=$token';
-    return WebSocketChannel.connect(Uri.parse(url));
+    try {
+      return WebSocketChannel.connect(Uri.parse(url));
+    } catch (e) {
+      debugPrint('Error connecting to WebSocket: $e');
+      return null;
+    }
   }
 
   // Send command to container via WebSocket

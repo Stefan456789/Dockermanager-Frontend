@@ -15,7 +15,13 @@ class WebSocketManager {
 
   Future<void> connect() async {
     _channel = await apiService.getContainerLogsStream(containerId);
-    _channel!.stream.listen(
+
+    if (_channel == null) {
+      onError?.call("Failed to connect to container logs stream");
+      return;
+    }
+
+    _channel?.stream.listen(
       (message) {
         onMessage?.call(message.toString());
       },

@@ -38,11 +38,13 @@ class _ContainerDetailScreenState extends State<ContainerDetailScreen> {
   }
 
   void _initWebSocket() {
+      if (!mounted) return;
     _wsManager = WebSocketManager(
       containerId: _currentContainer.id,
       apiService: _apiService,
     );
     _wsManager.onMessage = (message) {
+      if (!context.mounted) return;
       try {
         final data = jsonDecode(message);
         if (data['type'] == 'logs') {
@@ -58,6 +60,7 @@ class _ContainerDetailScreenState extends State<ContainerDetailScreen> {
       _scrollToBottom();
     };
     _wsManager.onError = (error) {
+      if (!context.mounted) return;
       setState(() {
         _isConnected = false;
         _logs.add('ERROR: WebSocket connection error');
@@ -65,6 +68,7 @@ class _ContainerDetailScreenState extends State<ContainerDetailScreen> {
       _showReconnectSnackBar();
     };
     _wsManager.onDone = () {
+      if (!context.mounted) return;
       setState(() {
         _isConnected = false;
         _logs.add('Disconnected from container logs');
@@ -117,9 +121,11 @@ class _ContainerDetailScreenState extends State<ContainerDetailScreen> {
         _currentContainer = updated;
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to refresh container details: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to refresh container details: $e')),
+        );
+      }
     }
   }
 
