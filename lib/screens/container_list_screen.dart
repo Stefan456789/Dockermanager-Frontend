@@ -15,11 +15,20 @@ class _ContainerListScreenState extends State<ContainerListScreen> {
   List<ContainerInfo> _containers = [];
   bool _isLoading = true;
   String? _error;
+  
+  late String _username = "User";
+  late String _userProfileImage = "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y";
 
   @override
   void initState() {
     super.initState();
     _fetchContainers();
+    initUser();
+}
+  Future<void> initUser() async {
+    await _apiService.authService.init();
+    _username = _apiService.authService.currentUser?.name ?? _username;
+    _userProfileImage = _apiService.authService.currentUser?.picture ?? _userProfileImage;
   }
 
   Future<void> _fetchContainers() async {
@@ -66,10 +75,79 @@ class _ContainerListScreenState extends State<ContainerListScreen> {
             onPressed: _fetchContainers,
             tooltip: 'Refresh container list',
           ),
+          PopupMenuButton<String>(
+            offset: const Offset(0, 50),
+            onSelected: _handleMenuSelection,
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              PopupMenuItem<String>(
+                value: 'profile',
+                child: Row(
+                  children: [
+                    const Icon(Icons.person),
+                    const SizedBox(width: 8),
+                    Text(_username),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(),
+              const PopupMenuItem<String>(
+                value: 'settings',
+                child: Row(
+                  children: [
+                    Icon(Icons.settings),
+                    SizedBox(width: 8),
+                    Text('Settings'),
+                  ],
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'signout',
+                child: Row(
+                  children: [
+                    const Icon(Icons.logout),
+                    const SizedBox(width: 8),
+                    Text('Sign out'),
+                  ],
+                ),
+              ),
+            ],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: CircleAvatar(
+                radius: 16,
+                backgroundImage: NetworkImage(_userProfileImage),
+                backgroundColor: Colors.grey[300],
+                child: _userProfileImage.isEmpty
+                  ? const Icon(Icons.person, size: 20, color: Colors.white)
+                  : null,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8), // Add some spacing
         ],
       ),
       body: _buildBody(),
     );
+  }
+  
+  void _handleMenuSelection(String value) {
+    switch (value) {
+      case 'profile':
+        // Show profile info or navigate to profile screen
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Profile for $_username'))
+        );
+        break;
+      case 'settings':
+        // Navigate to settings screen when implemented
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Settings will be implemented soon'))
+        );
+        break;
+      case 'signout':
+        _apiService.authService.signOut();
+        break;
+    }
   }
 
   Widget _buildBody() {

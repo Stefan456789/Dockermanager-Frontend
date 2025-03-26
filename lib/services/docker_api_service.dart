@@ -16,6 +16,7 @@ class DockerApiService {
   DockerApiService()
       : baseUrl = dotenv.env['BASE_URL'] ?? 'http://10.0.2.2:3000/api',
         wsUrl = dotenv.env['WS_URL'] ?? 'ws://10.0.2.2:3000/api' {
+    authService.init();
     _dio.options.baseUrl = baseUrl;
     _dio.options.connectTimeout = const Duration(seconds: 5);
     _dio.options.receiveTimeout = const Duration(seconds: 3);
