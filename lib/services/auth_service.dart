@@ -31,10 +31,7 @@ class User {
 class AuthService extends ChangeNotifier {
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     clientId: dotenv.env['GOOGLE_CLIENT_ID'],
-    scopes: ['email',
-    'profile',
-    'openid',
-    ],
+    scopes: ['email', 'profile', 'openid'],
   );
   final Dio _dio = Dio();
   User? _currentUser;
@@ -129,6 +126,36 @@ class AuthService extends ChangeNotifier {
     if (userJson != null && token != null) {
       _currentUser = User.fromJson(jsonDecode(userJson));
       _token = token;
+      
+      // Verify the token on startup
+      await verifyToken();
+    }
+  }
+
+  Future<bool> verifyToken() async {
+    if (_token == null) return false;
+    
+    try {
+      final response = await _dio.post('/auth/verify-token', data: {
+        'token': _token,
+      });
+      
+      final isValid = response.data['valid'] ?? false;
+      
+      if (isValid && response.data['user'] != null) {
+        // Update user data if needed
+        _currentUser = User.fromJson(response.data['user']);
+        notifyListeners();
+      } else {
+        // Clear invalid token
+        await signOut();
+      }
+      
+      return isValid;
+    } catch (e) {
+      debugPrint('Error verifying token: $e');
+      await signOut();
+      return false;
     }
   }
 }

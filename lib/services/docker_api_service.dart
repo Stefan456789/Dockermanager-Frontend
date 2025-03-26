@@ -10,22 +10,36 @@ class DockerApiService {
   final Dio _dio = Dio();
   final String baseUrl;
   final String wsUrl;
-  final AuthService? authService;
+  final AuthService authService;
 
-  DockerApiService({this.authService})
+  DockerApiService({required this.authService})
       : baseUrl = dotenv.env['BASE_URL'] ?? 'http://10.0.2.2:3000/api',
         wsUrl = dotenv.env['WS_URL'] ?? 'ws://10.0.2.2:3000/api' {
     _dio.options.baseUrl = baseUrl;
     _dio.options.connectTimeout = const Duration(seconds: 5);
     _dio.options.receiveTimeout = const Duration(seconds: 3);
 
-    // Add auth token to all requests if available
-    _dio.interceptors.add(InterceptorsWrapper(onRequest: (options, handler) {
-      if (authService?.token != null) {
-        options.headers['Authorization'] = 'Bearer ${authService!.token}';
-      }
-      return handler.next(options);
-    }));
+    // Add auth token to all requests
+    _dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) {
+        if (authService.token != null) {
+          options.headers['Authorization'] = 'Bearer ${authService.token}';
+        }
+        return handler.next(options);
+      },
+      onError: (DioException error, handler) async {
+        // Handle 401 errors (unauthorized)
+        if (error.response?.statusCode == 401) {
+          // Check if token is still valid, might have expired
+          final isValid = await authService.verifyToken();
+          if (!isValid) {
+            // Token is invalid, user needs to login again
+            debugPrint('Authentication error: Token invalid or expired');
+          }
+        }
+        return handler.next(error);
+      },
+    ));
   }
 
   Future<List<ContainerInfo>> getContainers() async {
@@ -78,10 +92,13 @@ class DockerApiService {
   }
 
   WebSocketChannel getContainerLogsStream(String id) {
-    String url = '$wsUrl/logs?containerId=$id';
-    if (authService?.token != null) {
-      url += '&token=${authService!.token}';
+    // Ensure token is added to WebSocket connection
+    final token = authService.token;
+    if (token == null) {
+      throw Exception('Authentication required');
     }
+    
+    final url = '$wsUrl/logs?containerId=$id&token=$token';
     return WebSocketChannel.connect(Uri.parse(url));
   }
 

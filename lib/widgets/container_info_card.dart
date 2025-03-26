@@ -34,11 +34,10 @@ class ContainerInfoCard extends StatelessWidget {
             Text('Image: ${container.image}'),
             Text('Created: ${container.created}'),
             if (container.ports.isNotEmpty)
-              Text('Ports: ' +
-                  container.ports
+              Text('Ports: ${container.ports
                       .map((p) =>
                           '${p.privatePort}${p.publicPort != null ? ':${p.publicPort}' : ''} (${p.type})')
-                      .join(', ')),
+                      .join(', ')}'),
           ],
         ),
       ),
