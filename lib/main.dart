@@ -3,20 +3,20 @@ import 'package:docker_manager/screens/login_screen.dart';
 import 'package:docker_manager/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load();
   
+  // Enable debugPaintSizeEnabled for visual debugging
+  // Uncomment the line below to see widget boundaries
+  // debugPaintSizeEnabled = true;
+  
   runApp(
-    // Use ChangeNotifierProvider instead of Provider.value
-    ChangeNotifierProvider(
-      create: (_) => AuthService(),
-      child: const MyApp(),
-    ),
+    const MyApp()
   );
 }
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -45,19 +45,37 @@ class AuthWrapper extends StatefulWidget {
 }
 
 class _AuthWrapperState extends State<AuthWrapper> {
-  late final Future<void> _initializationFuture;
+  final _authService = AuthService();
+  bool _isAuthenticated = false;
   
   @override
   void initState() {
     super.initState();
-    final authService = Provider.of<AuthService>(context, listen: false);
-    _initializationFuture = authService.init();
+    _authService.addListener(_authServiceListener);
+  }
+  
+  @override
+  void dispose() {
+    // Remove the listener when widget is disposed
+    _authService.removeListener(_authServiceListener);
+    debugPrint('AuthWrapper disposed');
+    super.dispose();
+  }
+  
+  // Separate method for the listener to be able to remove it in dispose
+  void _authServiceListener() {
+    if (mounted) {
+      setState(() {
+        _isAuthenticated = _authService.isAuthenticated;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    
     return FutureBuilder(
-      future: _initializationFuture,
+      future: _authService.init(),
       builder: (context, snapshot) {
         // Show loading indicator while initializing
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -77,15 +95,9 @@ class _AuthWrapperState extends State<AuthWrapper> {
           );
         }
         
-        // Get the current auth state after initialization is complete
-        final authService = Provider.of<AuthService>(context);
-        
-        // Redirect based on authentication status
-        if (authService.isAuthenticated) {
-          return const ContainerListScreen();
-        } else {
-          return const LoginScreen();
-        }
+      return _isAuthenticated 
+          ? const ContainerListScreen()
+          : const LoginScreen();
       },
     );
   }

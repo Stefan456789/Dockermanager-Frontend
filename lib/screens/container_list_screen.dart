@@ -25,8 +25,7 @@ class _ContainerListScreenState extends State<ContainerListScreen> {
     _fetchContainers();
     initUser();
 }
-  Future<void> initUser() async {
-    await _apiService.authService.init();
+  void initUser() {
     _username = _apiService.authService.currentUser?.name ?? _username;
     _userProfileImage = _apiService.authService.currentUser?.picture ?? _userProfileImage;
   }

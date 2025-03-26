@@ -38,9 +38,14 @@ class AuthService extends ChangeNotifier {
   String? _token;
   bool _isInitialized = false;
 
-  AuthService() {
+  static final AuthService _singleton = AuthService._internal();
+  
+  factory AuthService() {
+    return _singleton;
+  }
+  
+  AuthService._internal(){
     _dio.options.baseUrl = dotenv.env['BASE_URL'] ?? 'http://10.0.2.2:3000/api';
-    init();
   }
 
   User? get currentUser => _currentUser;

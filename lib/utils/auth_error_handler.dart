@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:docker_manager/screens/login_screen.dart';
 import 'package:docker_manager/services/auth_service.dart';
-import 'package:provider/provider.dart';
 
 class AuthErrorHandler {
   static void handleAuthError(BuildContext context, {String? message}) {
-    final authService = Provider.of<AuthService>(context, listen: false);
+    final authService = AuthService();
     
     // Show a snackbar with the error message
     ScaffoldMessenger.of(context).showSnackBar(

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:docker_manager/services/auth_service.dart';
-import 'package:provider/provider.dart';
 import 'package:docker_manager/screens/container_list_screen.dart';
 import 'package:sign_button/sign_button.dart';
 
@@ -22,14 +21,10 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final authService = Provider.of<AuthService>(context, listen: false);
+      final authService = AuthService();
       final success = await authService.signInWithGoogle();
 
-      if (success && context.mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const ContainerListScreen()),
-        );
-      } else if (context.mounted) {
+      if (!success && context.mounted) {
         setState(() {
           _errorMessage = 'Sign in failed. Please try again.';
         });
