@@ -56,7 +56,6 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
   Future<void> _updateUserPermissions(String userId, List<UserPermission> permissions) async {
     try {
       await AuthService().updateUserPermissions(userId, permissions);
-      await _loadUsers();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Permissions updated successfully')),

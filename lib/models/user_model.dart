@@ -16,7 +16,6 @@ class UserPermission {
       id: json['id'],
       name: json['name'],
       description: json['description'],
-      isGranted: json['isGranted'] ?? false,
     );
   }
 }
