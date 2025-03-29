@@ -17,8 +17,8 @@ class DockerApiService {
       : baseUrl = dotenv.env['BASE_URL'] ?? 'http://10.0.2.2:3000/api',
         wsUrl = dotenv.env['WS_URL'] ?? 'ws://10.0.2.2:3000/api' {
     _dio.options.baseUrl = baseUrl;
-    _dio.options.connectTimeout = const Duration(seconds: 5);
-    _dio.options.receiveTimeout = const Duration(seconds: 3);
+    _dio.options.connectTimeout = const Duration(seconds: 10);
+    _dio.options.receiveTimeout = const Duration(seconds: 10);
     // Add auth token to all requests
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) {
@@ -28,7 +28,9 @@ class DockerApiService {
         return handler.next(options);
       },
       onError: (DioException error, handler) async {
-        // Handle 401 errors (unauthorized)
+        debugPrint('Error occurred at ${error.requestOptions.path}: ${error.message}');
+        
+        // Handle different error status codes
         if (error.response?.statusCode == 401) {
           // Check if token is still valid, might have expired
           final isValid = await authService.verifyToken();
@@ -36,6 +38,10 @@ class DockerApiService {
             // Token is invalid, user needs to login again
             debugPrint('Authentication error: Token invalid or expired');
           }
+        } else if (error.response?.statusCode == 403) {
+          // Permission denied - log the error
+          debugPrint('Permission denied: You do not have access to this resource');
+          // The error will be handled by the calling method
         }
         return handler.next(error);
       },
@@ -49,6 +55,11 @@ class DockerApiService {
           .map((json) => ContainerInfo.fromJson(json))
           .toList();
     } catch (e) {
+      if (e is DioException && e.response?.statusCode == 403) {
+        debugPrint('Permission denied: Unable to access container list');
+        // Return empty list instead of rethrowing
+        return [];
+      }
       debugPrint('Error getting containers: $e');
       rethrow;
     }
@@ -59,6 +70,9 @@ class DockerApiService {
       final response = await _dio.get('/containers/$id');
       return ContainerInfo.fromJson(response.data);
     } catch (e) {
+      if (e is DioException && e.response?.statusCode == 403) {
+        debugPrint('Permission denied: Unable to access container details');
+      }
       debugPrint('Error getting container details: $e');
       rethrow;
     }
