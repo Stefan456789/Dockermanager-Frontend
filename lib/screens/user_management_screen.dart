@@ -11,24 +11,29 @@ class UserManagementScreen extends StatefulWidget {
 
 class _UserManagementScreenState extends State<UserManagementScreen> {
   List<UserDetails> _users = [];
+  List<UserPermission> _allPermissions = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadUsers();
+    _loadData();
   }
 
-  Future<void> _loadUsers() async {
+  Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
       final users = await AuthService().getUsers();
-      setState(() => _users = users);
+      final permissions = await AuthService().getAllPermissions();
+      setState(() {
+        _users = users;
+        _allPermissions = permissions;
+      });
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading users: $e')),
-      );
+          SnackBar(content: Text('Error loading data: $e')),
+        );
       }
     } finally {
       setState(() => _isLoading = false);
@@ -38,7 +43,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
   Future<void> _deleteUser(String userId) async {
     try {
       await AuthService().deleteUser(userId);
-      await _loadUsers();
+      await _loadData();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('User deleted successfully')),
@@ -89,15 +94,27 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                   title: Text(user.name ?? user.email),
                   subtitle: Text(user.email),
                   children: [
-                    ...user.permissions.map((permission) => CheckboxListTile(
-                      title: Text(permission.name),
-                      subtitle: Text(permission.description),
-                      value: permission.isGranted,
-                      onChanged: (bool? value) {
-                        setState(() => permission.isGranted = value ?? false);
-                        _updateUserPermissions(user.id, user.permissions);
-                      },
-                    )),
+                    ..._allPermissions.map((permission) {
+                      final isGranted = user.permissions.any((p) => p.id == permission.id);
+                      return CheckboxListTile(
+                        title: Text(permission.name),
+                        subtitle: Text(permission.description),
+                        value: isGranted,
+                        onChanged: (bool? value) {
+                          setState(() {
+                            if (value ?? false) {
+                              user.permissions.add(permission.copyWith(isGranted: true));
+                            } else {
+                              user.permissions.removeWhere((p) => p.id == permission.id);
+                            }
+                          });
+                          _updateUserPermissions(
+                            user.id,
+                            user.permissions,
+                          );
+                        },
+                      );
+                    }),
                     ListTile(
                       leading: const Icon(Icons.delete, color: Colors.red),
                       title: const Text('Delete User'),

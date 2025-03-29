@@ -211,4 +211,19 @@ class AuthService extends ChangeNotifier {
       throw Exception('Failed to update permissions');
     }
   }
+
+  Future<List<UserPermission>> getAllPermissions() async {
+    try {
+      final response = await _dio.get(
+        '/auth/all-permissions',
+        options: Options(headers: {'Authorization': 'Bearer $_token'}),
+      );
+      return (response.data['permissions'] as List)
+          .map((perm) => UserPermission.fromJson(perm))
+          .toList();
+    } catch (e) {
+      debugPrint('Error getting permissions: $e');
+      throw Exception('Failed to get permissions');
+    }
+  }
 }
