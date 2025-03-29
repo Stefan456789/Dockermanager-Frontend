@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:docker_manager/models/user_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -27,6 +28,7 @@ class User {
     );
   }
 }
+
 
 class AuthService extends ChangeNotifier {
   final GoogleSignIn _googleSignIn = GoogleSignIn(
@@ -162,6 +164,51 @@ class AuthService extends ChangeNotifier {
       debugPrint('Error verifying token: $e');
       await signOut();
       return false;
+    }
+  }
+
+  Future<List<UserDetails>> getUsers() async {
+    try {
+      final response = await _dio.get(
+        '/auth/users',
+        options: Options(headers: {'Authorization': 'Bearer $_token'}),
+      );
+      return (response.data['users'] as List)
+          .map((user) => UserDetails.fromJson(user))
+          .toList();
+    } catch (e) {
+      debugPrint('Error getting users: $e');
+      throw Exception('Failed to get users');
+    }
+  }
+
+  Future<void> deleteUser(String userId) async {
+    try {
+      await _dio.delete(
+        '/auth/users/$userId',
+        options: Options(headers: {'Authorization': 'Bearer $_token'}),
+      );
+    } catch (e) {
+      debugPrint('Error deleting user: $e');
+      throw Exception('Failed to delete user');
+    }
+  }
+
+  Future<void> updateUserPermissions(String userId, List<UserPermission> permissions) async {
+    try {
+      await _dio.post(
+        '/auth/users/$userId/permissions',
+        data: {
+          'permissions': permissions
+              .where((p) => p.isGranted)
+              .map((p) => p.id)
+              .toList(),
+        },
+        options: Options(headers: {'Authorization': 'Bearer $_token'}),
+      );
+    } catch (e) {
+      debugPrint('Error updating permissions: $e');
+      throw Exception('Failed to update permissions');
     }
   }
 }

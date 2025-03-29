@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:docker_manager/models/container_info.dart';
 import 'package:docker_manager/services/docker_api_service.dart';
+import 'package:docker_manager/services/settings_service.dart';
 import 'package:docker_manager/screens/container_detail_screen.dart';
+import 'package:docker_manager/screens/settings_screen.dart';
 
 class ContainerListScreen extends StatefulWidget {
   const ContainerListScreen({super.key});
@@ -12,21 +14,30 @@ class ContainerListScreen extends StatefulWidget {
 
 class _ContainerListScreenState extends State<ContainerListScreen> {
   final DockerApiService _apiService = DockerApiService();
+  late final SettingsService _settingsService;
   List<ContainerInfo> _containers = [];
   bool _isLoading = true;
   String? _error;
   
-  late String _username = "User";
+  late String _username = "Anonymous";
+  late String _email = "";
   late String _userProfileImage = "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y";
 
   @override
   void initState() {
     super.initState();
+    _initializeSettings();
     _fetchContainers();
     initUser();
-}
+  }
+
+  Future<void> _initializeSettings() async {
+    _settingsService = await SettingsService.create();
+  }
+
   void initUser() {
     _username = _apiService.authService.currentUser?.name ?? _username;
+    _email = _apiService.authService.currentUser?.email ?? _email;
     _userProfileImage = _apiService.authService.currentUser?.picture ?? _userProfileImage;
   }
 
@@ -44,7 +55,9 @@ class _ContainerListScreenState extends State<ContainerListScreen> {
       if (!mounted) return;
       
       setState(() {
-        _containers = containers;
+        _containers = containers.where((container) {
+          return _settingsService.showExited || container.state == 'running';
+        }).toList();
         _isLoading = false;
       });
     } catch (e) {
@@ -134,14 +147,16 @@ class _ContainerListScreenState extends State<ContainerListScreen> {
       case 'profile':
         // Show profile info or navigate to profile screen
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Profile for $_username'))
+          SnackBar(content: Text('Logged in as $_username ($_email)'))
         );
         break;
       case 'settings':
-        // Navigate to settings screen when implemented
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Settings will be implemented soon'))
-        );
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SettingsScreen(settingsService: _settingsService),
+          ),
+        ).then((_) => _fetchContainers());
         break;
       case 'signout':
         _apiService.authService.signOut();
