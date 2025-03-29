@@ -32,7 +32,7 @@ class _ContainerListScreenState extends State<ContainerListScreen> {
   }
 
   Future<void> _initializeSettings() async {
-    _settingsService = await SettingsService.create();
+    _settingsService = SettingsService();
   }
 
   void initUser() {

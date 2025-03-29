@@ -3,18 +3,31 @@ import 'package:shared_preferences/shared_preferences.dart';
 class SettingsService {
   static const String _commandPrefixKey = 'commandPrefix';
   static const String _showExitedKey = 'showExited';
+  static const String _maxLogLengthKey = 'maxLogLength';
 
-  final SharedPreferences _prefs;
+  late SharedPreferences _prefs;
+  final Future<void> _prefsFuture;
 
-  SettingsService(this._prefs);
+  static final SettingsService _instance = SettingsService._internal();
 
-  static Future<SettingsService> create() async {
-    final prefs = await SharedPreferences.getInstance();
-    return SettingsService(prefs);
+  factory SettingsService() {
+    return _instance;
   }
 
-  String get commandPrefix => _prefs.getString(_commandPrefixKey) ?? 'sudo';
+  SettingsService._internal() : _prefsFuture = Future.value() {
+    _create();
+  }
+  Future<void> _create() async {
+    _prefs = await SharedPreferences.getInstance();
+  }
+
+  Future<void> init() async {
+    await _prefsFuture;
+  }
+
+  String get commandPrefix => _prefs.getString(_commandPrefixKey) ?? '';
   bool get showExited => _prefs.getBool(_showExitedKey) ?? true;
+  int get maxLogLength => _prefs.getInt(_maxLogLengthKey) ?? 100;
 
   Future<void> setCommandPrefix(String prefix) async {
     await _prefs.setString(_commandPrefixKey, prefix);
@@ -22,5 +35,9 @@ class SettingsService {
 
   Future<void> setShowExited(bool show) async {
     await _prefs.setBool(_showExitedKey, show);
+  }
+
+  Future<void> setMaxLogLength(int length) async {
+    await _prefs.setInt(_maxLogLengthKey, length);
   }
 }

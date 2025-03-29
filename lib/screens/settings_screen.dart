@@ -13,12 +13,14 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   late TextEditingController _prefixController;
+  late TextEditingController _maxLogLengthController;
   late bool _showExited;
 
   @override
   void initState() {
     super.initState();
     _prefixController = TextEditingController(text: widget.settingsService.commandPrefix);
+    _maxLogLengthController = TextEditingController(text: widget.settingsService.maxLogLength.toString());
     _showExited = widget.settingsService.showExited;
   }
 
@@ -39,6 +41,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 helperText: 'Prefix added to all Docker commands (e.g., sudo)',
               ),
               onChanged: (value) => widget.settingsService.setCommandPrefix(value),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              controller: _maxLogLengthController,
+              decoration: const InputDecoration(
+                labelText: 'Max Log Length',
+                helperText: 'Maximum length of log messages (below 1 is unlimited)',
+              ),
+              keyboardType: TextInputType.number,
+              onChanged: (value) {
+                final length = int.tryParse(value) ?? 100;
+                widget.settingsService.setMaxLogLength(length);
+              },
             ),
           ),
           SwitchListTile(
@@ -72,6 +89,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void dispose() {
     _prefixController.dispose();
+    _maxLogLengthController.dispose();
     super.dispose();
   }
 }

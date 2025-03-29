@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:docker_manager/services/settings_service.dart';
 import 'package:flutter/material.dart';
 import 'package:docker_manager/models/container_info.dart';
 import 'package:docker_manager/services/docker_api_service.dart';
@@ -48,14 +49,14 @@ class _ContainerDetailScreenState extends State<ContainerDetailScreen> {
       try {
         final data = jsonDecode(message);
         if (data['type'] == 'logs') {
-          setState(() => _logs.add(data['log']));
+          setState(() => addToLogs(data['log']));
         } else if (data['type'] == 'commandOutput') {
-          setState(() => _logs.add('> ${data['output']}'));
+          setState(() => addToLogs('> ${data['output']}'));
         } else if (data['type'] == 'error') {
-          setState(() => _logs.add('ERROR: ${data['message']}'));
+          setState(() => addToLogs('ERROR: ${data['message']}'));
         }
       } catch (e) {
-        setState(() => _logs.add(message));
+        setState(() => addToLogs(message));
       }
       _scrollToBottom();
     };
@@ -63,7 +64,7 @@ class _ContainerDetailScreenState extends State<ContainerDetailScreen> {
       if (!context.mounted) return;
       setState(() {
         _isConnected = false;
-        _logs.add('ERROR: WebSocket connection error');
+        addToLogs('ERROR: WebSocket connection error');
       });
       _showReconnectSnackBar();
     };
@@ -71,15 +72,25 @@ class _ContainerDetailScreenState extends State<ContainerDetailScreen> {
       if (!context.mounted) return;
       setState(() {
         _isConnected = false;
-        _logs.add('Disconnected from container logs');
+        addToLogs('Disconnected from container logs');
       });
       _showReconnectSnackBar();
     };
     setState(() {
       _isConnected = true;
-      _logs.add('Connected to container logs...');
+      addToLogs('Connected to container logs...');
     });
     _wsManager.connect();
+  }
+
+  void addToLogs(String log) {
+    setState(() {
+      _logs.add(log);
+      var maxLogLength = SettingsService().maxLogLength;
+      if (maxLogLength > 0 && _logs.length > maxLogLength) {
+        _logs.removeAt(0);
+      }
+    });
   }
 
   void _scrollToBottom() {
@@ -131,11 +142,11 @@ class _ContainerDetailScreenState extends State<ContainerDetailScreen> {
 
   void _sendCommand() {
     if (_commandController.text.trim().isEmpty || !_isConnected) {
-      setState(() => _logs.add('ERROR: Not connected to container'));
+      setState(() => addToLogs('ERROR: Not connected to container'));
       return;
     }
-    final command = _commandController.text.trim();
-    setState(() => _logs.add('> $command'));
+    final command = SettingsService().commandPrefix + _commandController.text.trim();
+    setState(() => addToLogs('> $command'));
 
     final commandJson = jsonEncode({
       'type': 'command',
@@ -154,14 +165,14 @@ class _ContainerDetailScreenState extends State<ContainerDetailScreen> {
     try {
       setState(() => _isPerformingAction = true);
       await action();
-      setState(() => _logs.add('Container $actionName successful'));
+      setState(() => addToLogs('Container $actionName successful'));
       await _fetchContainerDetails();
       if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('$actionName successful')));
       }
     } catch (e) {
-      setState(() => _logs.add('ERROR: Failed to $actionName container: $e'));
+      setState(() => addToLogs('ERROR: Failed to $actionName container: $e'));
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to $actionName container: $e')),

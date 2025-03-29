@@ -11,7 +11,7 @@ class TerminalFullscreen extends StatelessWidget {
   final VoidCallback onBack;
   final VoidCallback onClear;
   final VoidCallback onRefresh;
-  final VoidCallback onGotoEnd; // new callback
+  final VoidCallback onGotoEnd;
 
   const TerminalFullscreen({
     super.key,
@@ -23,8 +23,9 @@ class TerminalFullscreen extends StatelessWidget {
     required this.onBack,
     required this.onClear,
     required this.onRefresh,
-    required this.onGotoEnd, // new
+    required this.onGotoEnd,
   });
+
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +44,7 @@ class TerminalFullscreen extends StatelessWidget {
             tooltip: 'Clear logs',
           ),
           IconButton(
-            icon: const Icon(Icons.arrow_downward), // new go-to-bottom button
+            icon: const Icon(Icons.arrow_downward),
             onPressed: onGotoEnd,
             tooltip: 'Go to bottom',
           ),

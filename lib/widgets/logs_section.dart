@@ -20,6 +20,7 @@ class LogsSection extends StatelessWidget {
     this.onClear,
   });
 
+
   @override
   Widget build(BuildContext context) {
     return Column(
