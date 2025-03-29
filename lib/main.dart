@@ -12,15 +12,41 @@ void main() async {
   // Enable debugPaintSizeEnabled for visual debugging
   // Uncomment the line below to see widget boundaries
   // debugPaintSizeEnabled = true;
-  
+
   runApp(
     const MyApp()
   );
 }
 
-
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final SettingsService _settingsService = SettingsService();
+  late ThemeMode _themeMode;
+
+  @override
+  void initState() {
+    super.initState();
+    _themeMode = _settingsService.themeMode;
+    _settingsService.addListener(_updateTheme);
+  }
+
+  void _updateTheme() {
+    setState(() {
+      _themeMode = _settingsService.themeMode;
+    });
+  }
+
+  @override
+  void dispose() {
+    _settingsService.removeListener(_updateTheme);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +58,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       darkTheme: ThemeData(brightness: Brightness.dark, useMaterial3: true),
-      themeMode: ThemeMode.system,
+      themeMode: _themeMode,
       home: const AuthWrapper(),
     );
   }
@@ -48,13 +74,13 @@ class AuthWrapper extends StatefulWidget {
 class _AuthWrapperState extends State<AuthWrapper> {
   final _authService = AuthService();
   bool _isAuthenticated = false;
-  
+
   @override
   void initState() {
     super.initState();
     _authService.addListener(_authServiceListener);
   }
-  
+
   @override
   void dispose() {
     // Remove the listener when widget is disposed
@@ -62,7 +88,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
     debugPrint('AuthWrapper disposed');
     super.dispose();
   }
-  
+
   // Separate method for the listener to be able to remove it in dispose
   void _authServiceListener() {
     if (mounted) {
@@ -74,7 +100,6 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    
     return FutureBuilder(
       future: _authService.init(),
       builder: (context, snapshot) {
@@ -86,7 +111,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
             ),
           );
         }
-        
+
         // Handle initialization errors
         if (snapshot.hasError) {
           return Scaffold(
@@ -95,10 +120,10 @@ class _AuthWrapperState extends State<AuthWrapper> {
             ),
           );
         }
-        
-      return _isAuthenticated 
-          ? const ContainerListScreen()
-          : const LoginScreen();
+
+        return _isAuthenticated 
+            ? const ContainerListScreen()
+            : const LoginScreen();
       },
     );
   }

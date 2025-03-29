@@ -23,9 +23,12 @@ class ContainerInfoCard extends StatelessWidget {
                   size: 16,
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  'Status: ${container.status}',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                Expanded(
+                  child: Text(
+                    'Status: ${container.status}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),

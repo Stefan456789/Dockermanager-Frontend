@@ -17,6 +17,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late TextEditingController _baseUrlController;
   late TextEditingController _wsUrlController;
   late bool _showExited;
+  late ThemeMode _themeMode;
 
   @override
   void initState() {
@@ -26,6 +27,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _baseUrlController = TextEditingController(text: widget.settingsService.baseUrl);
     _wsUrlController = TextEditingController(text: widget.settingsService.wsUrl);
     _showExited = widget.settingsService.showExited;
+    _themeMode = widget.settingsService.themeMode;
   }
 
   @override
@@ -68,7 +70,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               controller: _baseUrlController,
               decoration: const InputDecoration(
                 labelText: 'API Base URL',
-                helperText: 'Base URL for the Docker API',
+                helperText: 'Base URL for the Docker API (Requires Restart)',
               ),
               onChanged: (value) => widget.settingsService.setBaseUrl(value),
             ),
@@ -79,7 +81,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               controller: _wsUrlController,
               decoration: const InputDecoration(
                 labelText: 'WebSocket URL',
-                helperText: 'WebSocket URL for container logs',
+                helperText: 'WebSocket URL for container logs (Requires Restart)',
               ),
               onChanged: (value) => widget.settingsService.setWsUrl(value),
             ),
@@ -94,6 +96,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 widget.settingsService.setShowExited(value);
               });
             },
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: DropdownButtonFormField<ThemeMode>(
+              decoration: const InputDecoration(
+                labelText: 'Theme Mode',
+                border: OutlineInputBorder(),
+              ),
+              value: _themeMode,
+              items: const [
+                DropdownMenuItem(
+                  value: ThemeMode.system,
+                  child: Text('System Theme'),
+                ),
+                DropdownMenuItem(
+                  value: ThemeMode.light,
+                  child: Text('Light Theme'),
+                ),
+                DropdownMenuItem(
+                  value: ThemeMode.dark,
+                  child: Text('Dark Theme'),
+                ),
+              ],
+              onChanged: (ThemeMode? newValue) {
+                if (newValue != null) {
+                  setState(() {
+                    _themeMode = newValue;
+                    widget.settingsService.setThemeMode(newValue);
+                  });
+                }
+              },
+            ),
           ),
           ListTile(
             title: const Text('User Management'),
