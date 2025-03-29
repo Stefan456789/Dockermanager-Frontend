@@ -4,18 +4,19 @@ import 'package:flutter/foundation.dart';
 import 'package:docker_manager/models/container_info.dart';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:docker_manager/services/auth_service.dart';
+import 'package:docker_manager/services/settings_service.dart';
 
 class DockerApiService {
   final Dio _dio = Dio();
   final String baseUrl;
   final String wsUrl;
   final AuthService authService = AuthService();
+  final SettingsService settingsService = SettingsService();
 
   DockerApiService()
-      : baseUrl = dotenv.env['BASE_URL'] ?? 'http://10.0.2.2:3000/api',
-        wsUrl = dotenv.env['WS_URL'] ?? 'ws://10.0.2.2:3000/api' {
+      : baseUrl = SettingsService().baseUrl,
+        wsUrl = SettingsService().wsUrl {
     _dio.options.baseUrl = baseUrl;
     _dio.options.connectTimeout = const Duration(seconds: 10);
     _dio.options.receiveTimeout = const Duration(seconds: 10);

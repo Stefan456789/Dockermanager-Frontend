@@ -60,6 +60,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
 
   Future<void> _updateUserPermissions(String userId, List<UserPermission> permissions) async {
     try {
+      debugPrint('Updating permissions for user $userId: ${permissions.map((p) => p.name).join(', ')}');
       await AuthService().updateUserPermissions(userId, permissions);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -103,7 +104,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                         onChanged: (bool? value) {
                           setState(() {
                             if (value ?? false) {
-                              user.permissions.add(permission.copyWith(isGranted: true));
+                              user.permissions.add(permission);
                             } else {
                               user.permissions.removeWhere((p) => p.id == permission.id);
                             }

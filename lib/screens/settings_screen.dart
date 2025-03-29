@@ -14,6 +14,8 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   late TextEditingController _prefixController;
   late TextEditingController _maxLogLengthController;
+  late TextEditingController _baseUrlController;
+  late TextEditingController _wsUrlController;
   late bool _showExited;
 
   @override
@@ -21,6 +23,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.initState();
     _prefixController = TextEditingController(text: widget.settingsService.commandPrefix);
     _maxLogLengthController = TextEditingController(text: widget.settingsService.maxLogLength.toString());
+    _baseUrlController = TextEditingController(text: widget.settingsService.baseUrl);
+    _wsUrlController = TextEditingController(text: widget.settingsService.wsUrl);
     _showExited = widget.settingsService.showExited;
   }
 
@@ -38,7 +42,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               controller: _prefixController,
               decoration: const InputDecoration(
                 labelText: 'Command Prefix',
-                helperText: 'Prefix added to all Docker commands (e.g., sudo)',
+                helperText: 'Prefix added to all Docker commands \n(e.g., rcon-cli, sudo). PS: Don\'t forget the space!',
               ),
               onChanged: (value) => widget.settingsService.setCommandPrefix(value),
             ),
@@ -49,13 +53,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
               controller: _maxLogLengthController,
               decoration: const InputDecoration(
                 labelText: 'Max Log Length',
-                helperText: 'Maximum length of log messages (below 1 is unlimited)',
+                helperText: 'Maximum length of log messages (<1 is unlimited)',
               ),
               keyboardType: TextInputType.number,
               onChanged: (value) {
                 final length = int.tryParse(value) ?? 100;
                 widget.settingsService.setMaxLogLength(length);
               },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              controller: _baseUrlController,
+              decoration: const InputDecoration(
+                labelText: 'API Base URL',
+                helperText: 'Base URL for the Docker API',
+              ),
+              onChanged: (value) => widget.settingsService.setBaseUrl(value),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              controller: _wsUrlController,
+              decoration: const InputDecoration(
+                labelText: 'WebSocket URL',
+                helperText: 'WebSocket URL for container logs',
+              ),
+              onChanged: (value) => widget.settingsService.setWsUrl(value),
             ),
           ),
           SwitchListTile(
@@ -90,6 +116,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void dispose() {
     _prefixController.dispose();
     _maxLogLengthController.dispose();
+    _baseUrlController.dispose();
+    _wsUrlController.dispose();
     super.dispose();
   }
 }

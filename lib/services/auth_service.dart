@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:docker_manager/models/user_model.dart';
+import 'package:docker_manager/services/settings_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -47,7 +48,7 @@ class AuthService extends ChangeNotifier {
   }
   
   AuthService._internal(){
-    _dio.options.baseUrl = dotenv.env['BASE_URL'] ?? 'http://10.0.2.2:3000/api';
+    _dio.options.baseUrl = SettingsService().baseUrl;
   }
 
   User? get currentUser => _currentUser;
@@ -200,7 +201,6 @@ class AuthService extends ChangeNotifier {
         '/auth/users/$userId/permissions',
         data: {
           'permissions': permissions
-              .where((p) => p.isGranted)
               .map((p) => p.id)
               .toList(),
         },

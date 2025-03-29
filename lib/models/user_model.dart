@@ -2,13 +2,11 @@ class UserPermission {
   final int id;
   final String name;
   final String description;
-  bool isGranted;
 
   UserPermission({
     required this.id,
     required this.name,
     required this.description,
-    this.isGranted = false,
   });
 
   factory UserPermission.fromJson(Map<String, dynamic> json) {
@@ -29,7 +27,6 @@ class UserPermission {
       id: id ?? this.id,
       name: name ?? this.name,
       description: description ?? this.description,
-      isGranted: isGranted ?? this.isGranted,
     );
   }
 }

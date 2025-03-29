@@ -1,13 +1,14 @@
 import 'package:docker_manager/screens/container_list_screen.dart';
 import 'package:docker_manager/screens/login_screen.dart';
 import 'package:docker_manager/services/auth_service.dart';
+import 'package:docker_manager/services/settings_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load();
-  
+  await SettingsService().init();
   // Enable debugPaintSizeEnabled for visual debugging
   // Uncomment the line below to see widget boundaries
   // debugPaintSizeEnabled = true;
