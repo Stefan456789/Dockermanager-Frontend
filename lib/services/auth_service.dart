@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:docker_manager/models/user_model.dart';
+import 'package:docker_manager/models/container_info.dart';
 import 'package:docker_manager/services/settings_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -224,6 +225,93 @@ class AuthService extends ChangeNotifier {
     } catch (e) {
       debugPrint('Error getting permissions: $e');
       throw Exception('Failed to get permissions');
+    }
+  }
+
+  Future<List<ContainerInfo>> getContainers() async {
+    try {
+      final response = await _dio.get(
+        '/auth/containers',
+        options: Options(headers: {'Authorization': 'Bearer $_token'}),
+      );
+      return (response.data['containers'] as List)
+          .map((container) => ContainerInfo.fromJson(container))
+          .toList();
+    } catch (e) {
+      debugPrint('Error getting containers: $e');
+      throw Exception('Failed to get containers');
+    }
+  }
+
+  Future<List<UserPermission>> getContainerPermissions() async {
+    try {
+      final response = await _dio.get(
+        '/auth/container-permissions',
+        options: Options(headers: {'Authorization': 'Bearer $_token'}),
+      );
+      return (response.data['permissions'] as List)
+          .map((perm) => UserPermission.fromJson(perm))
+          .toList();
+    } catch (e) {
+      debugPrint('Error getting container permissions: $e');
+      throw Exception('Failed to get container permissions');
+    }
+  }
+
+  Future<List<UserDetails>> getUsersPermissionsForContainer(String containerId) async {
+    try {
+      final response = await _dio.get(
+        '/auth/containers/$containerId/users-permissions',
+        options: Options(headers: {'Authorization': 'Bearer $_token'}),
+      );
+      return (response.data['users'] as List)
+          .map((user) => UserDetails.fromJson(user))
+          .toList();
+    } catch (e) {
+      debugPrint('Error getting users permissions for container: $e');
+      throw Exception('Failed to get users permissions for container');
+    }
+  }
+
+  Future<List<UserPermission>> getCurrentUserContainerPermissions(String containerId) async {
+    try {
+      final response = await _dio.get(
+        '/auth/containers/$containerId/users-permissions',
+        options: Options(headers: {'Authorization': 'Bearer $_token'}),
+      );
+      // Find current user in the response
+      final users = response.data['users'] as List;
+      try {
+        final currentUserData = users.firstWhere(
+          (user) => user['id'] == _currentUser?.id,
+        );
+        return (currentUserData['permissions'] as List)
+            .map((perm) => UserPermission.fromJson(perm))
+            .toList();
+      } catch (e) {
+        // Current user not found in the list
+        return [];
+      }
+    } catch (e) {
+      debugPrint('Error getting current user container permissions: $e');
+      throw Exception('Failed to get current user container permissions');
+    }
+  }
+
+  Future<void> updateUserContainerPermissions(String containerId, String userId, List<UserPermission> permissions) async {
+    try {
+      await _dio.post(
+        '/auth/containers/$containerId/users/$userId/permissions',
+        data: {
+          'permissions': permissions
+              .map((p) => p.id)
+              .toList(),
+        },
+        options: Options(headers: {'Authorization': 'Bearer $_token'}),
+      );
+    } catch (e) {
+      debugPrint('Error updating container permissions: $e');
+      throw Exception('Failed to update container permissions');
     }
   }
 }
